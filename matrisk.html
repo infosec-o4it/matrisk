@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>MatrisK</title>
+    <meta charset="utf-8">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.1.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+      var max_campos      = 1000; //numero maximo de campos de texto permitidos
+      var conjunto         = $(".lista_campos_agregar");
+      var add_button      = $(".agrega_lista_boton");
+      var x = 1; //Contados inicial de campos de texto
+      $(add_button).click(function(e){
+        e.preventDefault();
+        if(x < max_campos){
+          x++;
+          $(conjunto).append('<div><input type="text" name="nombre[]" value="R'+(x-1)+'" disabled="true"><input type="text" name="descripcion[]" required="True" pattern="[0-9a-zÀ-ÿ ]{1,100}"><input type="text" name="probabilidad[]" maxlength="1" required="True" pattern="[1-5]{1}"><input type="text" name="impacto[]" maxlength="1" required="True" pattern="[1-5]{1}"><a href="#" class="elimina_lista_boton">Quitar</a></div>'); //add input box
+        }
+      });
+      $(conjunto).on("click",".elimina_lista_boton", function(e){
+        e.preventDefault(); $(this).parent('div').remove(); x--;
+      })
+    });
+    </script>
+  </head>
+  <body>
+    <form id="form-m" class="" action="matrisk.html" method="post">
+    <div class="lista_campos_agregar">
+      <input type="submit" name="graficar" value="graficar">
+      <button class="agrega_lista_boton">Añadir mas riesgos</button>
+      <input type="reset" name="kkk" value="limpiar">
+      <div><input type="text" name="nombre[]" value="R0" disabled="true"><input type="text" name="descripcion[]" pattern="[\s0-9a-zÀ-ÿ ]{1,100}" required="True" placeholder="Descripción"><input type="text" name="probabilidad[]" maxlength="1" required="True" pattern="[1-5]{1}" placeholder="Probabilidad"><input type="text" name="impacto[]" maxlength="1" required="True"  pattern="[1-5]{1}" placeholder="Impacto"></div>
+    </div>
+    </form>
+    <script type="text/javascript">
+
+    </script>
+    <canvas id="matrisk" width="957" height="526">
+      navegador no soporta html5 canvas
+    </canvas>
+    <script>
+      var ctx = document.getElementById("matrisk").getContext("2d");
+      var img = new Image();
+      img.src= "matrisk.png"
+      img.onload = function() {
+        var datos = document.getElementById("form-m");
+        datos.onsubmit = function(e) {
+          e.preventDefault();
+          var vimpacto = [];
+          $("input[name='impacto[]']").each(function() {
+            vimpacto.push($(this).val());
+          })
+          var vproba = [];
+          $("input[name='probabilidad[]']").each(function() {
+            vproba.push($(this).val());
+          })
+          var vdescripcion = [];
+          $("input[name='descripcion[]']").each(function() {
+            vdescripcion.push($(this).val());
+          })
+          var vnombre = [];
+          $("input[name='nombre[]']").each(function() {
+            vnombre.push($(this).val());
+          })
+          var elementos = [];
+          for (var k = 0; k < 5; k++) {
+            elementos.push([]);
+            for (var l = 0; l < 5 ; l++) {
+              elementos[k].push([]);
+            }
+          }
+          ctx.drawImage(img,0,0);
+          ctx.lineWidth=1;
+          ctx.font="12px sans-serif";
+          for (var i = 0; i < vproba.length; i++) {
+            var uitem = [];
+            var posx = 280+(120*vproba[i]);
+            var posy = 450-(70*vimpacto[i]);
+            var posxy = posx+"-"+posy
+            uitem.push("R"+i);
+            uitem.push(posxy);
+            uitem.push(posx);
+            uitem.push(posy);
+            uitem.push(vproba[i])
+            uitem.push(vimpacto[i])
+            uitem.push(1)
+            if(elementos[parseInt(vproba[i])-1][parseInt(vimpacto[i])-1].length != 0 ){
+                elementos[parseInt(vproba[i])-1][parseInt(vimpacto[i])-1][0] += "-" + uitem[0];
+                elementos[parseInt(vproba[i])-1][parseInt(vimpacto[i])-1][6] += 1;
+              }
+              else {
+                elementos[parseInt(vproba[i])-1][parseInt(vimpacto[i])-1] = uitem;
+              }
+          }
+          for (var u = 0; u < elementos.length; u++) {
+            for (var q = 0; q < elementos[u].length; q++) {
+              ctx.beginPath();
+              ctx.arc((290+(120*elementos[u][q][4])+((1*elementos[u][q][6])/2)),(445-(70*elementos[u][q][5])),11*elementos[u][q][6],0,2*Math.PI);
+              ctx.fillStyle = 'gray';
+              ctx.fill();
+              ctx.strokeStyle = '#003300';
+              ctx.stroke();
+              ctx.fillStyle="black"
+              ctx.lineStyle="#ffff00";
+              ctx.fillText(elementos[u][q][0],elementos[u][q][2]-((16*(elementos[u][q][6]-1))/2),elementos[u][q][3]);
+              var nose = elementos[u][q];
+            }
+          }
+          var element = document.getElementById("relleno1");
+          element.innerHTML ="";
+          for (var ij = 0; ij < vdescripcion.length; ij++) {
+            vdescripcion[ij]
+            var para = document.createElement("p");
+            var node = document.createTextNode("El riesgo de \""+vdescripcion[ij]+"\" identificado como "+vnombre[ij]+" tiene un nivel o \"score\" de riesgo es "+((vproba[ij]*vimpacto[ij]*10)/25));
+            para.appendChild(node);
+            element.appendChild(para);
+          }
+      }
+    }
+    </script>
+    <div id="relleno1">
+    </div>
+  </body>
+</html>
